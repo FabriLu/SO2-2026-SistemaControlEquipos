@@ -38,6 +38,9 @@ Esto permitirá evaluar la comunicación, monitoreo y administración remota de 
 > 🚧 **En desarrollo**
 
 Nombre: Fabrizio Hernán
+
 Apellido:Magne Luizaga
+
 Grupo:
+
 Rol o responsabilidad principal:Scrum master, Desarrollador
