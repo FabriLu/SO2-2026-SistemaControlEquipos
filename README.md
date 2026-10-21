@@ -7,7 +7,6 @@ Aplicación para administrar equipos de un aula desde un servidor central. El se
 - Inicio de sesión para el administrador y creación inicial de la cuenta mediante un comando Flask.
 - Registro de agentes con token de enrolamiento y credencial individual.
 - Panel web con estado de conexión, métricas y capturas de pantalla recientes.
-- Métricas de CPU, memoria RAM y disco enviadas por el agente.
 - Órdenes individuales y grupales para bloquear, desbloquear, mostrar mensajes, reiniciar y apagar equipos.
 - Registro de eventos, órdenes y sus confirmaciones.
 - Integración con Proxmox VE: consulta de estado y máquinas virtuales, asociación de un equipo con una VM y restauración de una o todas las VM asociadas al snapshot configurado.
