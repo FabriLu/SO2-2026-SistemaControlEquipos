@@ -1,0 +1,23 @@
+[Unit]
+Description=Agente de Control, Monitoreo y Pantalla para Aula (Sistemas Operativos)
+After=graphical.target network.target
+
+[Service]
+Type=simple
+# Ruta al entorno virtual y script del agente en el equipo del alumno
+WorkingDirectory=/opt/control-agent
+ExecStart=/opt/control-agent/venv/bin/python -m agent.client --config /opt/control-agent/config.json --interval 5
+Restart=always
+RestartSec=5
+
+# Variables para acceso al entorno gráfico de Ubuntu Desktop (Wayland / X11)
+Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=PULSE_SERVER=unix:/run/user/1000/pulse/native
+
+# Usuario de sesión del estudiante (ajustar según el usuario de Ubuntu)
+User=estudiante
+Group=estudiante
+
+[Install]
+WantedBy=default.target

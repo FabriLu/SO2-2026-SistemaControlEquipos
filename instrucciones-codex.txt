@@ -1,0 +1,138 @@
+# Instrucciones para Codex: Desarrollo del Sistema de Control de Equipos
+
+## 1. Contexto del proyecto
+
+Estoy desarrollando un proyecto semestral para la materia de Sistemas Operativos. El proyecto consiste en crear un **Sistema de Control y Administración de Equipos Informáticos para un laboratorio educativo**, con funcionamiento similar al de los programas de administración de cibercafés.
+
+Se pueden tomar como referencias funcionales Control de Ciber y Veyon, especialmente para comprender la administración centralizada y el bloqueo remoto de equipos. Sin embargo, **no se utilizarán estos programas como componentes del sistema ni se dependerá de ellos**. El desarrollo será propio.
+
+El sistema no estará basado en Windows. La implementación se realizará principalmente con Ubuntu y tecnologías de código abierto.
+
+## 2. Objetivo principal
+
+Permitir que un docente o administrador gestione las computadoras de un laboratorio desde una PC central, visualizando su estado y bloqueando o desbloqueando remotamente sus pantallas.
+
+## 3. Alcance de la primera versión
+
+Las funcionalidades iniciales serán:
+
+1. **Panel de administración:** interfaz web para que el docente pueda visualizar los equipos registrados.
+2. **Identificación de equipos:** cada PC estudiante tendrá una identidad única dentro del sistema.
+3. **Estado de conexión:** mostrar si cada equipo está conectado o desconectado.
+4. **Comunicación periódica:** cada cliente enviará señales periódicas al servidor para indicar que continúa funcionando.
+5. **Bloqueo remoto:** permitir que el docente ordene bloquear la pantalla de una PC estudiante.
+6. **Desbloqueo remoto:** permitir que el docente retire el bloqueo desde el panel.
+7. **Confirmación de órdenes:** distinguir entre órdenes pendientes, ejecutadas y fallidas.
+8. **Autenticación:** proteger el acceso al panel de administración.
+9. **Registro de eventos:** guardar las acciones importantes, incluyendo bloqueos, desbloqueos y errores relevantes.
+
+No se implementarán inicialmente las siguientes funcionalidades: cobros, tarifas, sesiones por tiempo, apagado y reinicio remoto, envío de mensajes, visualización remota de escritorios, recuperación automática del sistema operativo ni estadísticas avanzadas. Podrán evaluarse posteriormente.
+
+## 4. Tecnologías previstas
+
+- **Servidor:** Ubuntu Server 24.04 LTS.
+- **Clientes:** Ubuntu Desktop 24.04 LTS.
+- **Backend y API:** Python con Flask.
+- **Base de datos:** MySQL.
+- **Interfaz web:** HTML, CSS y JavaScript.
+- **Agente cliente:** aplicación en Python instalada en cada PC estudiante.
+- **Comunicación:** API HTTP, preferentemente HTTPS cuando se configure TLS.
+- **Control de versiones:** Git y GitHub.
+- **Entorno de pruebas:** Proxmox VE virtualizado dentro de VirtualBox.
+
+Se pueden proponer ajustes técnicos si existe una justificación clara, pero no se deben cambiar las tecnologías principales sin explicar el motivo y solicitar aprobación.
+
+## 5. Arquitectura del entorno de pruebas
+
+El entorno previsto tiene esta estructura:
+
+- PC física con Windows.
+- VirtualBox ejecutándose en la PC física.
+- Proxmox VE ejecutándose como máquina virtual dentro de VirtualBox.
+- Ubuntu Server como máquina virtual dentro de Proxmox, actuando como servidor del proyecto.
+- Una o varias máquinas virtuales Ubuntu Desktop dentro de Proxmox, actuando como PCs estudiantes.
+
+Es un entorno de virtualización anidada. No se debe asumir que las máquinas virtuales tienen conectividad entre sí ni inventar direcciones IP. Antes de configurar la comunicación, hay que comprobar las interfaces, direcciones IP, rutas, modo de red y reglas de firewall reales.
+
+La virtualización anidada puede imponer limitaciones de rendimiento y compatibilidad, especialmente para el entorno gráfico del cliente. Hay que tenerlas en cuenta al preparar las pruebas.
+
+## 6. Requisitos del bloqueo de pantalla
+
+El bloqueo remoto es una de las funcionalidades principales, pero debe implementarse con una arquitectura adecuada.
+
+La aplicación de bloqueo debe ejecutarse en la sesión gráfica del usuario de Ubuntu Desktop y mostrar una pantalla opaca a pantalla completa. El docente debe poder solicitar el bloqueo y desbloqueo desde el panel central.
+
+El agente cliente debe recibir las órdenes y comunicarse con el componente gráfico local mediante un mecanismo restringido y seguro.
+
+No se debe asumir que una ventana a pantalla completa equivale al bloqueo seguro del sistema operativo. Deben documentarse sus limitaciones y probarse situaciones como el cierre inesperado de la aplicación, la pérdida de conexión y la ausencia de una sesión gráfica.
+
+No se deben implementar mecanismos para evadir la autenticación de Ubuntu, modificar PAM de manera insegura ni conceder privilegios administrativos generales al agente.
+
+## 7. Seguridad
+
+- Autenticar a los usuarios del panel.
+- Guardar contraseñas mediante algoritmos de hash apropiados.
+- Utilizar credenciales individuales para los clientes.
+- Evitar secretos y contraseñas dentro del repositorio.
+- Validar todas las órdenes recibidas por el servidor y los clientes.
+- No permitir la ejecución arbitraria de comandos de terminal desde el panel.
+- Aplicar el principio de mínimo privilegio.
+- Registrar las operaciones administrativas importantes.
+- Validar los certificados TLS cuando se habilite HTTPS.
+- Evitar exponer el servicio directamente a Internet sin una arquitectura de seguridad adecuada.
+
+## 8. Forma de trabajo
+
+Trabaja de manera incremental y verifica cada etapa antes de continuar.
+
+Antes de escribir código, revisa el repositorio actual, el README, la carpeta `Documentación` y los demás archivos existentes. Respeta el trabajo previo y no sobrescribas documentos ni imágenes sin autorización.
+
+Si existe documentación del proyecto, úsala como referencia principal para mantener la coherencia con el informe académico.
+
+No inventes configuraciones del entorno ni afirmes que una prueba fue exitosa si no se ejecutó realmente.
+
+## 9. Primera etapa autorizada
+
+Comienza exclusivamente con la preparación de la infraestructura básica del proyecto:
+
+1. Inspeccionar el repositorio y resumir su estructura actual.
+2. Proponer y crear, si no existen, las carpetas iniciales para servidor, agente cliente, configuración, pruebas y documentación técnica.
+3. Preparar la aplicación Flask y su configuración inicial.
+4. Preparar la conexión con MySQL y las migraciones necesarias.
+5. Diseñar e implementar el modelo inicial de usuarios, equipos, credenciales de agentes, órdenes y eventos.
+6. Preparar la autenticación básica del administrador.
+7. Implementar los endpoints iniciales para registrar o identificar equipos, recibir señales periódicas y consultar su estado.
+8. Preparar el agente cliente para identificarse y comunicarse con el servidor.
+9. Crear pruebas básicas de la API y de los componentes implementados.
+10. Documentar cómo instalar, configurar, ejecutar y probar el servidor y el cliente.
+
+La estructura de carpetas y los modelos deben adaptarse al repositorio real; no es necesario crear archivos vacíos sin utilidad.
+
+**Importante:** en esta primera etapa no implementes todavía el bloqueo gráfico ni el desbloqueo remoto. Deja definida la arquitectura necesaria para incorporarlos posteriormente.
+
+## 10. Condiciones de ejecución
+
+- No elimines archivos existentes.
+- No reemplaces el README ni la documentación académica sin autorización.
+- No incluyas secretos reales en los archivos del proyecto.
+- Proporciona archivos de configuración de ejemplo cuando sea necesario.
+- No ejecutes operaciones destructivas ni comandos que alteren la infraestructura virtual sin solicitar autorización.
+- Si falta información importante del entorno, indícala y solicita el dato necesario.
+- Ejecuta las pruebas disponibles y comunica sus resultados reales.
+
+## 11. Informe al terminar la primera etapa
+
+Cuando termines, presenta un resumen que incluya:
+
+1. Archivos creados y modificados.
+2. Arquitectura implementada.
+3. Dependencias añadidas y su finalidad.
+4. Configuración necesaria para MySQL.
+5. Comandos para instalar y ejecutar el servidor.
+6. Comandos para instalar y ejecutar el agente cliente.
+7. Variables de entorno y archivos de configuración necesarios.
+8. Pruebas realizadas y resultados obtenidos.
+9. Problemas pendientes o limitaciones identificadas.
+10. Pasos necesarios para continuar con la implementación del bloqueo remoto.
+
+No avances a la segunda etapa hasta presentar el informe y esperar mi aprobación.

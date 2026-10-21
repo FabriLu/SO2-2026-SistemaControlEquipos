@@ -1,0 +1,7 @@
+{
+  "server_url": "https://servidor-lab.local:5000",
+  "agent_id": "00000000-0000-4000-8000-000000000001",
+  "device_name": "PC-Estudiante-01",
+  "enrollment_token": "REPLACE-WITH-ONE-TIME-ENROLLMENT-TOKEN"
+}
+

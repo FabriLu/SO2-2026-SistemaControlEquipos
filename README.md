@@ -18,13 +18,15 @@ El sistema permitirá que un equipo central, utilizado por el docente o administ
 
 ## Tecnologías
 
-- **Python** y **Flask** — Servidor y API.
-- **MySQL** — Gestión de la base de datos.
-- **HTML, CSS y JavaScript** — Interfaz web.
-- **psutil** — Monitoreo de recursos del sistema.
-- **Ubuntu Server** — Servidor central.
-- **Ubuntu Desktop** — Equipos cliente.
-- **Proxmox VE** — Entorno de pruebas virtualizado.
+- **Python** y **Flask** — Servidor y API REST.
+- **SQLite** — Base de datos local para inventario, credenciales y auditoría de eventos.
+- **HTML5, Vanilla CSS (Glassmorphism Dark) y JavaScript** — Panel de control docente en vivo.
+- **Proxmox VE REST API** — Mecanismo de recuperación de máquinas virtuales mediante rollback al snapshot `estado_limpio`.
+- **psutil** — Monitoreo de recursos de hardware (CPU, RAM y almacenamiento).
+- **Tkinter & Subprocess** — Bloqueo de pantalla y notificaciones en clientes Ubuntu.
+- **Ubuntu Server 24.04** — Servidor central del docente.
+- **Ubuntu Desktop 24.04** — Equipos cliente de los estudiantes.
+- **Systemd** — Servicio en segundo plano para el agente.
 - **Git y GitHub** — Control de versiones.
 
 ## Entorno de pruebas
@@ -39,8 +41,8 @@ Esto permitirá evaluar la comunicación, monitoreo y administración remota de 
 
 Nombre: Fabrizio Hernán
 
-Apellido:Magne Luizaga
+Apellido: Magne Luizaga
 
 Grupo:
 
-Rol o responsabilidad principal:Scrum master, Desarrollador
+Rol o responsabilidad principal: Scrum master, Desarrollador

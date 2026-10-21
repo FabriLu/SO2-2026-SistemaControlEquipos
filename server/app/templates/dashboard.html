@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Control de Aula — Sistemas Operativos{% endblock %}
+
+{% block content %}
+<header class="main-header glass-panel">
+  <div class="header-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <h1 class="header-title">Control &amp; Recuperación de Aula</h1>
+      <span class="header-sub">Laboratorio de Sistemas Operativos &bull; Ubuntu 24.04</span>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div id="proxmox-status-badge" class="proxmox-badge" title="Servidor Proxmox físico de la red local">
+      <span class="pulse-dot checking"></span>
+      <span class="pve-label">Proxmox VE:</span>
+      <span id="pve-host-text" class="pve-val">{{ proxmox_info.host }}</span>
+      <span id="pve-status-text" class="pve-status">Verificando...</span>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    <div class="user-pill">
+      <span class="user-avatar">{{ user.username[0]|upper }}</span>
+      <span class="user-name">{{ user.username }}</span>
+      <span class="user-role badge">{{ user.role }}</span>
+    </div>
+    <a href="{{ url_for('web.logout') }}" class="btn btn-outline-danger btn-sm" title="Cerrar Sesión">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      Salir
+    </a>
+  </div>
+</header>
+
+<main class="dashboard-body">
+  <!-- Stats Ribbon -->
+  <section class="stats-ribbon">
+    <div class="stat-card glass-panel">
+      <div class="stat-icon stat-blue">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value" id="stat-total">{{ devices|length }}</span>
+        <span class="stat-label">Equipos Registrados</span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-panel">
+      <div class="stat-icon stat-green">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value" id="stat-online">-</span>
+        <span class="stat-label">En Línea</span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-panel">
+      <div class="stat-icon stat-amber">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value" id="stat-locked">-</span>
+        <span class="stat-label">Pantallas Bloqueadas</span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-panel">
+      <div class="stat-icon stat-purple">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value" id="stat-proxmox">-</span>
+        <span class="stat-label">VMs Proxmox Vinculadas</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Master Control Bar -->
+  <section class="master-toolbar glass-panel">
+    <div class="toolbar-group global-actions">
+      <button id="btn-lock-all" class="btn btn-warning" onclick="confirmGlobalCommand('lock', '¿Bloquear todas las pantallas de los estudiantes?')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Bloquear Aula
+      </button>
+
+      <button id="btn-unlock-all" class="btn btn-success" onclick="confirmGlobalCommand('unlock', '¿Desbloquear todas las pantallas?')">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+        </svg>
+        Desbloquear Aula
+      </button>
+
+      <button id="btn-msg-all" class="btn btn-primary" onclick="openGlobalMessageModal()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Mensaje al Aula
+      </button>
+
+      <button id="btn-restore-all" class="btn btn-purple" onclick="confirmGlobalRestore()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Recuperación Masiva Proxmox
+      </button>
+    </div>
+
+    <div class="toolbar-group secondary-actions">
+      <button class="btn btn-outline" onclick="openEventsModal()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        Auditoría
+      </button>
+
+      <button class="btn btn-outline" onclick="openProxmoxModal()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        Proxmox VE
+      </button>
+
+      <button id="btn-refresh" class="btn btn-outline btn-icon" onclick="fetchDevices()" title="Refrescar datos">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Filter & Search Controls -->
+  <section class="filter-bar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="filter-search" placeholder="Buscar equipo por nombre, hostname o IP..." oninput="applyFilters()">
+    </div>
+
+    <div class="filter-pills">
+      <button class="pill active" data-filter="all" onclick="setFilter('all', this)">Todos (<span id="count-all">0</span>)</button>
+      <button class="pill" data-filter="online" onclick="setFilter('online', this)">En Línea (<span id="count-online">0</span>)</button>
+      <button class="pill" data-filter="offline" onclick="setFilter('offline', this)">Desconectados (<span id="count-offline">0</span>)</button>
+      <button class="pill" data-filter="locked" onclick="setFilter('locked', this)">Bloqueados (<span id="count-locked">0</span>)</button>
+      <button class="pill" data-filter="proxmox" onclick="setFilter('proxmox', this)">Con Proxmox VM (<span id="count-proxmox">0</span>)</button>
+    </div>
+  </section>
+
+  <!-- Live Student Grid -->
+  <section id="devices-grid" class="devices-grid">
+    <!-- Se inyecta dinámicamente mediante JS -->
+  </section>
+</main>
+
+<!-- MODAL: Enviar Mensaje -->
+<div id="modal-message" class="modal-overlay hidden">
+  <div class="modal-content glass-panel">
+    <div class="modal-header">
+      <h3 id="modal-msg-title">Enviar Mensaje</h3>
+      <button class="btn-close" onclick="closeModal('modal-message')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="modal-msg-device-id" value="">
+      <p id="modal-msg-target-desc" class="modal-desc"></p>
+      <div class="form-group">
+        <label for="modal-msg-text">Contenido del Mensaje para el Estudiante:</label>
+        <textarea id="modal-msg-text" rows="4" placeholder="Escribe aquí el aviso o instrucción..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-message')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitMessage()">Enviar Mensaje</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Recuperación Proxmox Rollback -->
+<div id="modal-restore" class="modal-overlay hidden">
+  <div class="modal-content glass-panel">
+    <div class="modal-header">
+      <h3 class="text-purple">🔄 Recuperación de Equipo (Proxmox VE)</h3>
+      <button class="btn-close" onclick="closeModal('modal-restore')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="modal-restore-device-id" value="">
+      <div class="alert alert-purple">
+        <strong>Rollback al Snapshot Limpio:</strong> La máquina virtual volverá al estado funcional guardado y se encenderá de inmediato.
+      </div>
+      <div class="restore-summary-box">
+        <div class="summary-item">
+          <span class="label">Equipo:</span>
+          <span class="value" id="modal-restore-name">-</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Proxmox VMID:</span>
+          <span class="value text-purple font-mono" id="modal-restore-vmid">-</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Nodo Proxmox:</span>
+          <span class="value font-mono" id="modal-restore-node">pve</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Snapshot Objetivo:</span>
+          <span class="value font-mono badge badge-purple" id="modal-restore-snapshot">estado_limpio</span>
+        </div>
+      </div>
+      <div id="restore-progress-box" class="restore-progress-box hidden">
+        <div class="spinner"></div>
+        <p>Restaurando snapshot en el servidor Proxmox físico...</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="btn-cancel-restore" onclick="closeModal('modal-restore')">Cancelar</button>
+      <button class="btn btn-purple" id="btn-confirm-restore" onclick="submitProxmoxRestore()">Ejecutar Rollback Ahora</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Asignar VMID Proxmox -->
+<div id="modal-assign-vm" class="modal-overlay hidden">
+  <div class="modal-content glass-panel">
+    <div class="modal-header">
+      <h3>Asociar VM de Proxmox al Equipo</h3>
+      <button class="btn-close" onclick="closeModal('modal-assign-vm')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="modal-assign-device-id" value="">
+      <p id="modal-assign-name" class="modal-desc"></p>
+      
+      <div class="form-group">
+        <label for="modal-assign-select">Seleccionar VM detectada en Proxmox:</label>
+        <select id="modal-assign-select" onchange="syncVmSelect()">
+          <option value="">-- Cargando VMs de Proxmox... --</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="modal-assign-vmid">VMID Numérico:</label>
+          <input type="number" id="modal-assign-vmid" placeholder="ej. 101">
+        </div>
+        <div class="form-group flex-1">
+          <label for="modal-assign-node">Nodo:</label>
+          <input type="text" id="modal-assign-node" value="pve">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-assign-vm')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitAssignProxmox()">Guardar Asociación</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Auditoría de Eventos -->
+<div id="modal-events" class="modal-overlay hidden">
+  <div class="modal-content glass-panel modal-lg">
+    <div class="modal-header">
+      <h3>Registro de Auditoría de Acciones</h3>
+      <button class="btn-close" onclick="closeModal('modal-events')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha / Hora</th>
+              <th>Tipo de Evento</th>
+              <th>Equipo / VM</th>
+              <th>Detalles</th>
+            </tr>
+          </thead>
+          <tbody id="events-table-body">
+            <tr><td colspan="4" class="text-center">Cargando eventos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="loadEvents()">Actualizar Logs</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-events')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Configuración Proxmox VE -->
+<div id="modal-proxmox" class="modal-overlay hidden">
+  <div class="modal-content glass-panel modal-lg">
+    <div class="modal-header">
+      <h3>Conexión con Proxmox VE</h3>
+      <button class="btn-close" onclick="closeModal('modal-proxmox')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="pve-detailed-status" class="alert alert-info">
+        Comprobando conexión con la API REST de Proxmox...
+      </div>
+      <h4>Máquinas Virtuales Descubiertas en Proxmox:</h4>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>VMID</th>
+              <th>Nombre de VM</th>
+              <th>Nodo</th>
+              <th>Estado</th>
+              <th>CPU / RAM</th>
+            </tr>
+          </thead>
+          <tbody id="pve-vms-table-body">
+            <tr><td colspan="5" class="text-center">Cargando lista de VMs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="loadProxmoxModalData()">Reintentar Conexión</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-proxmox')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Pantalla Completa Zoom -->
+<div id="modal-screen-zoom" class="modal-overlay hidden" onclick="closeModal('modal-screen-zoom')">
+  <div class="modal-content modal-fullscreen glass-panel" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="zoom-title">Pantalla del Estudiante en Vivo</h3>
+      <button class="btn-close" onclick="closeModal('modal-screen-zoom')">&times;</button>
+    </div>
+    <div class="modal-body zoom-body">
+      <img id="zoom-image" src="" alt="Pantalla en vivo">
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.APP_CONFIG = {
+    heartbeatTimeout: {{ timeout_seconds }},
+    csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+  };
+</script>
+<script src="{{ url_for('web.static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{
+  "_comment": "Configuración de conexión para la API REST de Proxmox VE (Servidor físico en red local)",
+  "host": "192.168.1.50",
+  "port": 8006,
+  "node": "pve",
+  "snapshot_clean": "estado_limpio",
+  "verify_ssl": false,
+  "auth_method": "token",
+  "user": "root@pam",
+  "token_id": "control-aula",
+  "token_secret": "00000000-0000-0000-0000-000000000000",
+  "password_fallback": ""
+}
