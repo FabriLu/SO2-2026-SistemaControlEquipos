@@ -1,48 +1,75 @@
-# Sistema de Control, Monitoreo y Recuperación de Equipos Informáticos
+# Sistema de Control, Monitoreo y Recuperación de Equipos
 
-Proyecto de semestre orientado al desarrollo de un sistema centralizado para la administración de equipos informáticos en aulas de laboratorio.
+Aplicación para administrar equipos de un aula desde un servidor central. El servidor ofrece un panel web y una API; cada equipo estudiante ejecuta un agente que reporta su estado y recibe órdenes. El proyecto está en desarrollo.
 
-El sistema permitirá que un equipo central, utilizado por el docente o administrador, pueda supervisar el estado de las computadoras conectadas a la red, consultar el uso de sus recursos y ejecutar acciones de administración autorizadas de forma remota.
+## Funciones implementadas
 
-## Funcionalidades
+- Inicio de sesión para el administrador y creación inicial de la cuenta mediante un comando Flask.
+- Registro de agentes con token de enrolamiento y credencial individual.
+- Panel web con estado de conexión, métricas y capturas de pantalla recientes.
+- Métricas de CPU, memoria RAM y disco enviadas por el agente.
+- Órdenes individuales y grupales para bloquear, desbloquear, mostrar mensajes, reiniciar y apagar equipos.
+- Registro de eventos, órdenes y sus confirmaciones.
+- Integración con Proxmox VE: consulta de estado y máquinas virtuales, asociación de un equipo con una VM y restauración de una o todas las VM asociadas al snapshot configurado.
+- Endpoint de salud del servidor en `/health`.
 
-- Registro y gestión de equipos del laboratorio.
-- Monitoreo del uso de CPU, memoria RAM y almacenamiento.
-- Visualización del estado y disponibilidad de los equipos.
-- Envío de mensajes a las computadoras conectadas.
-- Bloqueo y desbloqueo de equipos.
-- Reinicio y apagado remoto.
-- Registro de eventos y acciones realizadas.
-- Generación de alertas ante determinados eventos.
-- Recuperación de los equipos a un estado funcional previamente establecido.
+Las órdenes para los agentes se entregan en el siguiente heartbeat. La restauración en Proxmox depende de que la VM tenga el snapshot configurado y de que el servidor tenga credenciales y permisos válidos.
 
 ## Tecnologías
 
-- **Python** y **Flask** — Servidor y API REST.
-- **SQLite** — Base de datos local para inventario, credenciales y auditoría de eventos.
-- **HTML5, Vanilla CSS (Glassmorphism Dark) y JavaScript** — Panel de control docente en vivo.
-- **Proxmox VE REST API** — Mecanismo de recuperación de máquinas virtuales mediante rollback al snapshot `estado_limpio`.
-- **psutil** — Monitoreo de recursos de hardware (CPU, RAM y almacenamiento).
-- **Tkinter & Subprocess** — Bloqueo de pantalla y notificaciones en clientes Ubuntu.
-- **Ubuntu Server 24.04** — Servidor central del docente.
-- **Ubuntu Desktop 24.04** — Equipos cliente de los estudiantes.
-- **Systemd** — Servicio en segundo plano para el agente.
-- **Git y GitHub** — Control de versiones.
+- Python, Flask, Flask-SQLAlchemy y Flask-Migrate.
+- SQLite por defecto; la configuración también admite otros motores SQLAlchemy.
+- HTML, CSS y JavaScript para el panel web.
+- Agente Python con `requests`, `psutil`, `mss` y Pillow.
+- API REST de Proxmox VE para la recuperación de máquinas virtuales.
+- `systemd` como opción para ejecutar el agente en Ubuntu.
 
-## Entorno de pruebas
+Las dependencias se encuentran separadas entre [`requirements-server.txt`](requirements-server.txt) y [`requirements-agent.txt`](requirements-agent.txt).
 
-El proyecto será desarrollado y probado inicialmente en un entorno virtualizado mediante **Proxmox VE**, simulando una red de laboratorio con un servidor central y múltiples equipos cliente.
+## Inicio rápido del servidor
 
-Esto permitirá evaluar la comunicación, monitoreo y administración remota de los equipos antes de realizar pruebas en un entorno físico.
+Requiere Python 3.10 o posterior.
 
-## Estado del proyecto
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements-server.txt
+```
 
-> 🚧 **En desarrollo**
+Copia `.env.example` a `.env` y configura al menos `SECRET_KEY` y `AGENT_ENROLLMENT_TOKEN`. Para usar Proxmox, configura también las variables `PROXMOX_*`. Después ejecuta:
 
-Nombre: Fabrizio Hernán
+```bash
+flask --app server.wsgi:app db upgrade
+flask --app server.wsgi:app create-admin
+flask --app server.wsgi:app run --host 0.0.0.0 --port 5000
+```
 
-Apellido: Magne Luizaga
+Abre `http://localhost:5000` en el navegador. `create-admin` solicita nombre de usuario y contraseña; exige una contraseña de al menos 12 caracteres.
 
-Grupo:
+## Instalar un agente
 
-Rol o responsabilidad principal: Scrum master, Desarrollador
+Consulta la [guía de instalación y despliegue](docs/installation.md) para configurar el agente, preparar Proxmox y registrar el servicio `systemd`. La plantilla de configuración del agente está en [`config/agent.example.json`](config/agent.example.json); cada equipo necesita un `agent_id` UUID único y un token de enrolamiento válido. Al enrolarse, el agente reemplaza el token por su credencial individual.
+
+## Pruebas
+
+La suite automatizada está en `tests/` y se ejecuta con:
+
+```bash
+python -m pytest -v
+```
+
+## Estructura
+
+```text
+agent/       Agente de los equipos estudiante
+config/      Plantillas de configuración
+docs/        Guía de instalación y despliegue
+migrations/  Migraciones de la base de datos
+server/      Aplicación Flask, API, panel y cliente Proxmox
+tests/       Pruebas automatizadas
+```
+
+## Datos del proyecto
+
+- Responsable: Fabrizio Hernán Magne Luizaga
+- Rol: Scrum master y desarrollador
